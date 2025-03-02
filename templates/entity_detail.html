@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <title>{{ entity.name }} - Entity Details</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="entity-page">
+    <div class="entity-header">
+        <div class="container">
+            <div class="entity-header-content">
+                <div class="entity-info">
+                    <h1>{{ entity.name }}</h1>
+                    {% if entity.reference %}
+                    <div class="entity-reference">{{ _('Reference') }}: {{ entity.reference }}</div>
+                    {% endif %}
+                    {% if entity.aliases %}
+                    <div class="entity-aliases">
+                        {% for alias in entity.aliases %}
+                        <span class="alias-tag">{{ alias }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="entity-actions">
+                    <button class="btn btn-primary">
+                        <i class="fas fa-download"></i>
+                        {{ _('Download Report') }}
+                    </button>
+                    <button class="btn btn-secondary">
+                        <i class="fas fa-share-alt"></i>
+                        {{ _('Share') }}
+                    </button>
+                </div>
+            </div>
+
+            <div class="risk-ribbon">
+                {% if entity.risk_level == 'HIGH' %}
+                <div class="risk-badge high">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    {{ _('High Risk') }}
+                </div>
+                {% elif entity.risk_level == 'MEDIUM' %}
+                <div class="risk-badge medium">
+                    <i class="fas fa-exclamation-circle"></i>
+                    {{ _('Medium Risk') }}
+                </div>
+                {% else %}
+                <div class="risk-badge low">
+                    <i class="fas fa-check-circle"></i>
+                    {{ _('Low Risk') }}
+                </div>
+                {% endif %}
+                
+                {% for dataset in entity.datasets %}
+                <div class="dataset-badge {{ dataset }}">
+                    <i class="fas {% if dataset == 'sanctions' %}fa-ban
+                              {% elif dataset == 'pep' %}fa-user-tie
+                              {% elif dataset == 'adverse_media' %}fa-newspaper
+                              {% elif dataset == 'insolvency' %}fa-chart-line
+                              {% else %}fa-info-circle{% endif %}"></i>
+                    {{ _(dataset|title) }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="entity-content">
+            <div class="main-content">
+                {% if entity.addresses %}
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-map-marker-alt"></i>
+                            {{ _('Registered Addresses') }}
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="address-list">
+                            {% for address in entity.addresses %}
+                            <div class="address-item">
+                                {% if address.country %}
+                                <div class="address-country">
+                                    <img src="https://flagcdn.com/24x18/{{ address.country|lower }}.png" 
+                                         alt="{{ address.country }} flag"
+                                         class="country-flag">
+                                    <span class="country-name">{{ address.country }}</span>
+                                </div>
+                                {% endif %}
+                                <div class="address-details">
+                                    {{ address.text|safe }}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if entity.notes %}
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-sticky-note"></i>
+                            {{ _('Notes and Findings') }}
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="notes-list">
+                            {% for note in entity.notes %}
+                            <div class="note-item">
+                                <div class="note-content">{{ note.text|safe }}</div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                {% if entity.documents %}
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-file-alt"></i>
+                            {{ _('Supporting Documents') }}
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="documents-list">
+                            {% for doc in entity.documents %}
+                            <div class="document-item">
+                                <div class="document-info">
+                                    <div class="document-title">
+                                        {% if doc.title %}
+                                            {{ doc.title|safe }}
+                                        {% else %}
+                                            {{ _('Document') }} #{{ doc.reference }}
+                                        {% endif %}
+                                    </div>
+                                    {% if doc.summary %}
+                                    <div class="document-summary">{{ doc.summary|safe }}</div>
+                                    {% endif %}
+                                </div>
+                                {% if doc.url %}
+                                <div class="document-preview">
+                                    <div class="document-link">
+                                        <a href="{{ doc.url|safe }}" target="_blank" rel="noopener noreferrer">
+                                            <i class="fas fa-external-link-alt"></i>
+                                            {{ _('View Document') }}
+                                        </a>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                                          </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="side-content">
+                {% if entity.datasets %}
+                <div class="content-card">
+                    <div class="card-header">
+                        <h2>
+                            <i class="fas fa-tags"></i>
+                            {{ _('Data Sources') }}
+                        </h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="datasets-list">
+                            {% for dataset in entity.datasets %}
+                            <div class="dataset-item {{ dataset }}">
+                                <i class="fas {% if dataset == 'sanctions' %}fa-ban
+                                          {% elif dataset == 'pep' %}fa-user-tie
+                                          {% elif dataset == 'adverse_media' %}fa-newspaper
+                                          {% elif dataset == 'insolvency' %}fa-chart-line
+                                          {% else %}fa-info-circle{% endif %}"></i>
+                                {{ _(dataset|title) }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

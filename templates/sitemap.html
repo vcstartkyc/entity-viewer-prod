@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Entity Directory - StartKyc') }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ _('Entity Directory') }}</h1>
+    <p class="subtitle">{{ _('Complete list of all entities in our database') }}</p>
+</div>
+
+<div class="sitemap-content">
+    <div class="alphabet-nav">
+        {% for letter in letters %}
+            <a href="#section-{{ letter }}" class="alphabet-link {% if grouped_entities[letter] %}active{% endif %}">
+                {{ letter }}
+            </a>
+        {% endfor %}
+    </div>
+
+    {% for letter in letters %}
+        {% if grouped_entities[letter] %}
+            <div id="section-{{ letter }}" class="entity-section">
+                <h2 class="section-letter">{{ letter }}</h2>
+                
+                {% for entity in grouped_entities[letter] %}
+                    <div class="entity-link-item">
+                        <a href="{{ url_for('entity_detail', name_slug=entity.slug) }}" class="entity-link">
+                            {{ entity.name }}
+                            {% if entity.reference %}
+                            <span class="entity-reference">({{ entity.reference }})</span>
+                            {% endif %}
+                        </a>
+                        
+                        <div class="entity-badges">
+                            {% for dataset in entity.datasets %}
+                            <span class="dataset-badge {{ dataset }}">
+                                <i class="fas {% if dataset == 'sanctions' %}fa-ban
+                                          {% elif dataset == 'pep' %}fa-user-tie
+                                          {% elif dataset == 'adverse_media' %}fa-newspaper
+                                          {% elif dataset == 'insolvency' %}fa-chart-line
+                                          {% else %}fa-info-circle{% endif %}"></i>
+                            </span>
+                            {% endfor %}
+                            
+                            <span class="risk-badge {{ entity.risk_level|lower }}">
+                                <i class="fas {% if entity.risk_level == 'HIGH' %}fa-exclamation-triangle
+                                          {% elif entity.risk_level == 'MEDIUM' %}fa-exclamation-circle
+                                          {% else %}fa-check-circle{% endif %}"></i>
+                            </span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .sitemap-content {
+        padding: 24px;
+        background: var(--background-white);
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .alphabet-nav {
+        position: sticky;
+        top: calc(var(--header-height) + 16px);
+        background: var(--background-white);
+        padding: 16px 0;
+        margin-bottom: 24px;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        z-index: 10;
+    }
+
+    .alphabet-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 4px;
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.2s;
+        opacity: 0.5;
+    }
+
+    .alphabet-link.active {
+        opacity: 1;
+    }
+
+    .alphabet-link:hover {
+        background-color: var(--background-light);
+        color: var(--primary-color);
+    }
+
+    .entity-section {
+        margin-bottom: 32px;
+    }
+
+    .section-letter {
+        font-size: 24px;
+        font-weight: 600;
+        color: var(--primary-color);
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid var(--primary-color);
+    }
+
+    .entity-link-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        border-radius: 4px;
+        transition: all 0.2s;
+    }
+
+    .entity-link-item:hover {
+        background-color: var(--background-light);
+    }
+
+    .entity-link {
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .entity-link:hover {
+        color: var(--primary-color);
+    }
+
+    .entity-reference {
+        color: var(--text-secondary);
+        font-size: 0.9em;
+        font-weight: normal;
+    }
+
+    .entity-badges {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .dataset-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        font-size: 0.9em;
+    }
+
+    .dataset-badge.sanctions {
+        background: #ffebee;
+        color: #c62828;
+    }
+
+    .dataset-badge.pep {
+        background: #fff3e0;
+        color: #ef6c00;
+    }
+
+    .dataset-badge.adverse_media {
+        background: #e8f5e9;
+        color: #2e7d32;
+    }
+
+    .dataset-badge.insolvency {
+        background: #e3f2fd;
+        color: #1565c0;
+    }
+
+    .risk-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        font-size: 0.9em;
+    }
+
+    .risk-badge.high {
+        background: #dc3545;
+        color: #fff;
+    }
+
+    .risk-badge.medium {
+        background: #ffc107;
+        color: #000;
+    }
+
+    .risk-badge.low {
+        background: #28a745;
+        color: #fff;
+    }
+</style>
+{% endblock %}

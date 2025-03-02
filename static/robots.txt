@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Sitemap: /sitemap.xml
+
+# Allow crawling of all content
+User-agent: *
+Disallow:
+
+# Specify crawl rate for high-traffic bots
+User-agent: Googlebot
+Crawl-delay: 1
+
+User-agent: bingbot
+Crawl-delay: 1
+
+# Ensure entity pages are prioritized
+Allow: /entity/

@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('Entity Search - StartKyc Entity Viewer') }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>{{ _('Entity Search') }}</h1>
+    <p class="subtitle">{{ _('Search and screen individuals and organizations for compliance risks, sanctions, and more.') }}</p>
+</div>
+
+<div class="container">
+    <div class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="{{ _('Search by name, reference, or tag...') }}" aria-label="{{ _('Search input') }}">
+        <select id="dataset-filter" class="filter-select" aria-label="{{ _('Dataset filter') }}">
+            <option value="">{{ _('All Datasets') }}</option>
+            <option value="sanctions">{{ _('Sanctions') }}</option>
+            <option value="pep">{{ _('PEP') }}</option>
+            <option value="adverse_media">{{ _('Adverse Media') }}</option>
+            <option value="insolvency">{{ _('Insolvency') }}</option>
+            <option value="disqualified">{{ _('Disqualified Directors') }}</option>
+        </select>
+    </div>
+
+    <div id="loading" class="loading-spinner" style="display: none;">
+        <i class="fas fa-circle-notch fa-spin"></i>
+        <span>{{ _('Loading...') }}</span>
+    </div>
+
+    <div id="error" class="error" style="display: none;">
+        <i class="fas fa-exclamation-circle"></i>
+        <span>{{ _('An error occurred while fetching the data. Please try again.') }}</span>
+    </div>
+
+    <div id="no-results" class="no-results" style="display: none;">
+        <i class="fas fa-search"></i>
+        <span>{{ _('No entities found matching your search criteria.') }}</span>
+    </div>
+
+    <div id="entity-grid" class="entity-grid"></div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const searchInput = document.getElementById('search-input');
+        const datasetFilter = document.getElementById('dataset-filter');
+        const entityGrid = document.getElementById('entity-grid');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const noResults = document.getElementById('no-results');
+
+        let searchTimeout;
+
+        function showLoading() {
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            noResults.style.display = 'none';
+            entityGrid.style.display = 'none';
+        }
+
+        function hideLoading() {
+            loading.style.display = 'none';
+            entityGrid.style.display = 'grid';
+        }
+
+        function showError() {
+            error.style.display = 'block';
+            loading.style.display = 'none';
+            noResults.style.display = 'none';
+            entityGrid.style.display = 'none';
+        }
+
+        function showNoResults() {
+            noResults.style.display = 'block';
+            loading.style.display = 'none';
+            error.style.display = 'none';
+            entityGrid.style.display = 'none';
+        }
+
+        function createEntityCard(entity) {
+            const card = document.createElement('div');
+            card.className = 'entity-card';
+            card.setAttribute('data-risk', entity.risk_level.toLowerCase());
+            
+            const link = document.createElement('a');
+            link.href = `/entity/${entity.slug}`;
+            link.className = 'entity-link';
+            
+            const nameDiv = document.createElement('div');
+            nameDiv.className = 'entity-name';
+            const nameText = document.createElement('span');
+            nameText.textContent = entity.name;
+            nameDiv.appendChild(nameText);
+            
+            const detailsDiv = document.createElement('div');
+            detailsDiv.className = 'entity-details';
+            
+            // Add reference if available
+            if (entity.reference) {
+                const refSpan = document.createElement('span');
+                refSpan.className = 'entity-reference';
+                const refText = document.createElement('span');
+                refText.textContent = `Ref: ${entity.reference}`;
+                refSpan.appendChild(refText);
+                detailsDiv.appendChild(refSpan);
+            }
+            
+            // Add dataset badges
+            const badgesDiv = document.createElement('div');
+            badgesDiv.className = 'dataset-badges';
+            
+            entity.datasets.forEach(dataset => {
+                const badge = document.createElement('span');
+                badge.className = `dataset-badge ${dataset}`;
+                const badgeText = document.createElement('span');
+                badgeText.textContent = dataset.replace('_', ' ');
+                badge.appendChild(badgeText);
+                badgesDiv.appendChild(badge);
+            });
+            
+            // Add risk level badge
+            const riskBadge = document.createElement('span');
+            riskBadge.className = `risk-badge ${entity.risk_level.toLowerCase()}`;
+            const riskText = document.createElement('span');
+            riskText.textContent = entity.risk_level;
+            riskBadge.appendChild(riskText);
+            badgesDiv.appendChild(riskBadge);
+            
+            link.appendChild(nameDiv);
+            link.appendChild(detailsDiv);
+            link.appendChild(badgesDiv);
+            card.appendChild(link);
+            
+            return card;
+        }
+
+        async function searchEntities() {
+            const query = searchInput.value.trim();
+            const dataset = datasetFilter.value;
+
+            showLoading();
+
+            try {
+                const response = await fetch(`/api/entities?q=${encodeURIComponent(query)}&dataset=${encodeURIComponent(dataset)}`);
+                if (!response.ok) throw new Error('Network response was not ok');
+                
+                const data = await response.json();
+                
+                if (!data.entities || data.entities.length === 0) {
+                    showNoResults();
+                    return;
+                }
+
+                entityGrid.innerHTML = '';
+                data.entities.forEach(entity => {
+                    const card = createEntityCard(entity);
+                    entityGrid.appendChild(card);
+                });
+
+                hideLoading();
+            } catch (err) {
+                console.error('Error fetching entities:', err);
+                showError();
+            }
+        }
+
+        function debounceSearch() {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(searchEntities, 300);
+        }
+
+        searchInput.addEventListener('input', debounceSearch);
+        datasetFilter.addEventListener('change', searchEntities);
+
+        // Initial search
+        searchEntities();
+    });
+</script>
+{% endblock %}
