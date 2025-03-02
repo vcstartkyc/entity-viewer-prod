@@ -4,10 +4,10 @@
 mkdir -p .output
 mkdir -p .output/functions
 
-# Copy application files to functions directory
-cp -r app.py data static templates translations messages.pot babel.cfg requirements.txt .output/functions/
+# Copy application files
+cp -r app.py data static templates translations messages.pot babel.cfg requirements.txt .output/
 
-# Copy function handler
+# Copy functions
 cp -r functions/* .output/functions/
 
 # Create _routes.json for static asset handling
