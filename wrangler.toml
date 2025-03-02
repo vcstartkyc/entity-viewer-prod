@@ -1,0 +1,6 @@
+name = "entity-viewer-prod"
+main = "worker.js"
+compatibility_date = "2024-03-02"
+
+[site]
+bucket = ".output"
